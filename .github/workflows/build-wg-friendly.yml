@@ -27,7 +27,7 @@ jobs:
       - name: Build with SDK
         uses: openwrt/gh-action-sdk@main
         env:
-          ARCH: x86_64-25.12
+          ARCH: x86_64-snapshots
           # Hier nutzen wir jetzt den vorbereiteten Ordner
           FEED_DIR: openwrt_feed_collection
           PACKAGES: wg-friendly
