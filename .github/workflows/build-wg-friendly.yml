@@ -9,29 +9,28 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Feed
         uses: actions/checkout@v4
 
-      # Dieser Schritt muss VOR dem SDK kommen, damit der Ordner für chown bereitsteht
-      - name: Create Feed Directory
+      - name: Prepare Feed Directory
         run: |
-          mkdir -p openwrt_feed_collection
-          if [ -d "net" ]; then cp -R net openwrt_feed_collection/; fi
+          mkdir -p openwrt_feed_collection/custom
+          cp -R net openwrt_feed_collection/custom/
 
-      - name: Build with SDK
+      - name: Build with SDK (allarch)
         uses: openwrt/gh-action-sdk@main
         env:
-          ARCH: x86_64
+          ARCH: all
           FEED_DIR: openwrt_feed_collection
           PACKAGES: wg-friendly
           INDEX: 1
 
-      - name: Prepare Feed Directory
+      - name: Collect APKs
         run: |
           mkdir -p deploy/all
           find bin/packages/ -name "wg-friendly*.apk" -exec cp {} deploy/all/ \;
-          find bin/packages/ -name "packages.adb" -exec cp {} deploy/all/ \; || \
           find bin/packages/ -name "Packages*" -exec cp {} deploy/all/ \;
           echo "<h1>OpenWrt Feed Collection</h1><p>Update: $(date)</p>" > deploy/index.html
 
