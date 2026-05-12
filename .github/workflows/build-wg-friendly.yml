@@ -22,7 +22,7 @@ jobs:
       - name: Prepare Feed Directory
         run: |
           mkdir -p openwrt_feed_collection/custom
-          cp -R net openwrt_feed_collection/custom/
+          cp -R custom/net openwrt_feed_collection/custom/
 
       - name: Build with SDK (allarch)
         uses: openwrt/gh-action-sdk@main
