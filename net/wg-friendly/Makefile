@@ -1,11 +1,12 @@
 include $(TOPDIR)/rules.mk
 
-# Paket-Informationen
 PKG_NAME:=wg-friendly
 PKG_VERSION:=1.0.0
 PKG_RELEASE:=1
 
-# Link zum REPOSITORY (nicht zur Raw-Datei)
+# Nutze das Flag für Architektur-unabhängige Pakete
+PKG_FLAGS:=nonshared
+
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com
 PKG_SOURCE_VERSION:=main
@@ -20,25 +21,23 @@ define Package/wg-friendly
   SECTION:=net
   CATEGORY:=Network
   TITLE:=WireGuard friendly peernames (ucode)
+  # Hier wird die Architektur auf "all" gesetzt
+  PKGARCH:=all
   DEPENDS:=+ucode +ucode-mod-uci +ucode-mod-fs +wireguard-tools
-  URL:=https://github.com/g6094199/OpenWRT-Wireguard-friendly-cli-peernames
+  URL:=https://github.com
 endef
 
-# apk info
 define Package/wg-friendly/description
   This script adds wireguard friendly user names from the network config
   to a wg output imitation.
 endef
 
-# script only, no compile needed
 define Build/Compile
 	true
 endef
 
-# Installationspfad auf dem Zielsystem
 define Package/wg-friendly/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	# Da das Repo nur die Datei 'wg-friendly' im Hauptverzeichnis hat:
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wg-friendly $(1)/usr/bin/wg-friendly
 endef
 
