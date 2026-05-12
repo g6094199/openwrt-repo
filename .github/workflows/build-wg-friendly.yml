@@ -18,11 +18,12 @@ jobs:
         run: |
           echo "Repo root content:"
           ls -R .
-        
+
       - name: Prepare Feed Directory
         run: |
-          mkdir -p openwrt_feed_collection/custom
-          cp -R custom/net openwrt_feed_collection/custom/
+          mkdir -p openwrt_feed_collection
+          # Dein Paket liegt unter custom/net/wg-friendly/
+          cp -R custom openwrt_feed_collection/
 
       - name: Build with SDK (allarch)
         uses: openwrt/gh-action-sdk@main
