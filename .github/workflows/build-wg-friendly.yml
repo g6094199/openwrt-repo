@@ -1,11 +1,16 @@
-name: Build wg-friendly APK
+name: Build and Deploy APK Feed
 
 on:
-  workflow_dispatch: # Das aktiviert den "Run workflow" Button bei GitHub
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write # Wichtig, um in den gh-pages Branch zu schreiben
 
 jobs:
   build:
-    name: Build for x86_64
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Feed
@@ -18,14 +23,19 @@ jobs:
           FEED_DIR: openwrt_feed_collection
           PACKAGES: wg-friendly
 
-      - name: Collect APKs
+      - name: Prepare Feed Directory
         run: |
-          mkdir -p bin/output
-          find bin/packages/ -name "*.apk" -exec cp {} bin/output/ \;
-          find bin/packages/ -name "packages.adb" -exec cp {} bin/output/ \;
+          mkdir -p deploy/all
+          # Kopiere alle APKs und den Index (packages.adb)
+          find bin/packages/ -name "*.apk" -exec cp {} deploy/all/ \;
+          find bin/packages/ -name "packages.adb" -exec cp {} deploy/all/ \;
+          # Erstelle eine einfache index.html, damit die Seite nicht leer ist
+          echo "<h1>OpenWrt Feed Collection</h1>" > deploy/index.html
+          echo "<p>Letztes Update: $(date)</p>" >> deploy/index.html
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: wg-friendly-package-x86_64
-          path: bin/output/*
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
+          force_orphan: true # Erstellt einen sauberen Branch ohne Git-Historie
