@@ -32,7 +32,11 @@ jobs:
           FEED_DIR: openwrt_feed_collection
           PACKAGES: wg-friendly
           INDEX: 1
-
+          # Dieser Befehl wird ausgeführt, BEVOR das SDK zu bauen beginnt:
+          VARS: |
+            mkdir -p package/feeds/myfeed
+            cp -R $GITHUB_WORKSPACE/net package/feeds/myfeed/
+            
       - name: Prepare Feed Directory
         run: |
           mkdir -p deploy/all
