@@ -16,28 +16,32 @@ jobs:
       - name: Checkout Feed
         uses: actions/checkout@v4
 
-      # Dieser Schritt behebt den "No such file or directory" Fehler
       - name: Create Feed Directory
         run: |
+          # Das SDK erwartet, dass der Feed-Ordner im Workspace existiert
           mkdir -p openwrt_feed_collection
-          # Kopiere den Inhalt des Repos in den Unterordner für das SDK
-          cp -R net openwrt_feed_collection/ 2>/dev/null || true
-          cp -R utils openwrt_feed_collection/ 2>/dev/null || true
+          # Kopiere deine Ordnerstruktur in das Feed-Verzeichnis
+          [ -d net ] && cp -R net openwrt_feed_collection/
+          [ -d utils ] && cp -R utils openwrt_feed_collection/
 
       - name: Build with SDK
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: x86_64
-          # Hier nutzen wir jetzt den vorbereiteten Ordner
           FEED_DIR: openwrt_feed_collection
+          # WICHTIG: Das Präfix 'package/' weglassen, nur den Paketnamen nutzen
           PACKAGES: wg-friendly
+          # Index sofort mitbauen
+          INDEX: 1
 
       - name: Prepare Feed Directory
         run: |
           mkdir -p deploy/all
-          # Suche nach den gebauten APKs im bin-Ordner des SDK-Workspace
-          find bin/packages/ -name "*.apk" -exec cp {} deploy/all/ \;
-          find bin/packages/ -name "packages.adb" -exec cp {} deploy/all/ \;
+          # Suche die gebauten APKs und den Index
+          find bin/packages/ -name "wg-friendly*.apk" -exec cp {} deploy/all/ \;
+          find bin/packages/ -name "packages.adb" -exec cp {} deploy/all/ \; || \
+          find bin/packages/ -name "Packages*" -exec cp {} deploy/all/ \;
+          
           echo "<h1>OpenWrt Feed Collection</h1><p>Update: $(date)</p>" > deploy/index.html
 
       - name: Deploy to GitHub Pages
