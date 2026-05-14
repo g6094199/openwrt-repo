@@ -46,8 +46,8 @@ jobs:
           echo "Fetching wg-friendly from: $RAW_URL"
           curl -fsSL "$RAW_URL" -o openwrt/package/local/wg-friendly/files/wg-friendly
           chmod 0755 openwrt/package/local/wg-friendly/files/wg-friendly
-
           cat > openwrt/package/local/wg-friendly/Makefile <<'MAKEFILE'
+
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wg-friendly
