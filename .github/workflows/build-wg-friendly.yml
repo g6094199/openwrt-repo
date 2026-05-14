@@ -1,62 +1,36 @@
-name: Build wg-friendly on the fly and publish to GitHub Pages
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-      - 25.12
-
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    container:
+      image: openwrt/sdk:x86-64 # Nutzt das offizielle, fertige SDK für 25.12
     env:
-      OPENWRT_REF: openwrt-25.12
       REPO_PACKAGES_DIR: repo/packages
       GHPAGES_BRANCH: gh-pages
-      # Pinne hier optional einen Commit/Tag für Reproduzierbarkeit
       WG_FRIENDLY_COMMIT: main
 
     steps:
-      - name: Checkout feed repo (optional)
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: feed-repo
 
-      - name: Checkout OpenWrt source
-        uses: actions/checkout@v4
-        with:
-          repository: openwrt/openwrt
-          ref: ${{ env.OPENWRT_REF }}
-          path: openwrt
-
-      - name: Install build dependencies (conditional)
+      - name: Prepare package inside SDK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y git build-essential libncurses5-dev gawk gettext unzip file python3 python3-pip curl
-          if ! sudo apt-get install -y python3-distutils; then
-            sudo apt-get install -y python3.11-distutils python3.12-distutils || true
-          fi
+          # Im SDK-Container sind die Pfade bereits vorbereitet
+          mkdir -p package/local/wg-friendly/files
+          
+          # Korrekte GitHub-Actions-Syntax für Env-Variablen
+          RAW_URL="githubusercontent.com{{ env.WG_FRIENDLY_COMMIT }}/wg-friendly"
+          curl -fsSL "$RAW_URL" -o package/local/wg-friendly/files/wg-friendly
+          chmod 0755 package/local/wg-friendly/files/wg-friendly
 
-      - name: Prepare package directory and fetch wg-friendly script (on the fly)
-        run: |
-          set -e
-          mkdir -p openwrt/package/local/wg-friendly/files
-          RAW_URL="https://raw.githubusercontent.com/g6094199/OpenWRT-Wireguard-friendly-cli-peernames/${WG_FRIENDLY_COMMIT}/wg-friendly"
-          echo "Fetching wg-friendly from: $RAW_URL"
-          curl -fsSL "$RAW_URL" -o openwrt/package/local/wg-friendly/files/wg-friendly
-          chmod 0755 openwrt/package/local/wg-friendly/files/wg-friendly
-
-          cat > openwrt/package/local/wg-friendly/Makefile <<'MAKEFILE'
+          # Makefile mit echten Tabs (\t) befüllen
+          cat << 'EOF' > package/local/wg-friendly/Makefile
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wg-friendly
 PKG_VERSION:=0.1.0
 PKG_RELEASE:=1
-
 PKG_MAINTAINER:=g6094199
 PKG_LICENSE:=GPL-3.0
-PKG_LICENSE_FILES:=LICENSE
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -67,87 +41,34 @@ define Package/wg-friendly
   DEPENDS:=+wireguard-tools
 endef
 
-define Package/wg-friendly/description
-  Small helper to show WireGuard peers with friendly names from UCI.
-endef
-
-define Build/Prepare
-    $(call Build/Prepare/Default)
-endef
-
 define Build/Compile
-    # no compile step; script is shell
-endef
+enddefine
 
 define Package/wg-friendly/install
-    $(INSTALL_DIR) $(1)/usr/bin
-    $(INSTALL_BIN) ./files/wg-friendly $(1)/usr/bin/wg-friendly
+	$(INSTALL_DIR) $(1)/usr/bin
+	$(INSTALL_BIN) ./files/wg-friendly $(1)/usr/bin/wg-friendly
 endef
 
 $(eval $(call BuildPackage,wg-friendly))
-MAKEFILE
+EOF
 
-          cat > openwrt/package/local/wg-friendly/LICENSE <<'LICENSE'
-GPL-3.0-or-later
-LICENSE
-
-          ls -la openwrt/package/local/wg-friendly
-
-      - name: Update feeds (safe) and list packages
+      - name: Build package
         run: |
-          cd openwrt
-          ./scripts/feeds update -a || true
-          ./scripts/feeds install -a || true
-          find package -maxdepth 3 -type f -name "Makefile" -print | sed -n '1,200p'
-          grep -R "Package/wg-friendly" -n package || true
+          # Da es das fertige SDK ist, reicht dieser Befehl sofort aus!
+          make package/local/wg-friendly/compile V=s
 
-      - name: Create default .config (non-interactive)
+      - name: Collect artifacts
         run: |
-          cd openwrt
-          make defconfig
-
-      - name: Build package wg-friendly (non-interactive)
-        env:
-          TERM: xterm
-        run: |
-          cd openwrt
-          TERM=xterm make package/wg-friendly/compile V=s
-
-      - name: Collect .apk artifacts
-        run: |
-          cd openwrt
           mkdir -p ../${{ env.REPO_PACKAGES_DIR }}
-          find bin/packages -type f -name "*.apk" -exec cp {} ../${{ env.REPO_PACKAGES_DIR }}/ \; || true
-          ls -la ../${{ env.REPO_PACKAGES_DIR }} || true
-
-      - name: Generate apk index (Alpine container fallback)
-        run: |
-          cd repo/packages
-          if ls *.apk 1> /dev/null 2>&1; then
-            if command -v apk >/dev/null 2>&1; then
-              apk index -o packages.adb *.apk
-            else
-              echo "apk not found on runner, using Alpine container to generate packages.adb"
-              docker run --rm -v "$PWD":/work -w /work alpine:3.18 sh -c "apk index -o packages.adb *.apk"
-            fi
-            ls -la packages.adb
-          else
-            echo "No .apk files found"
-          fi
-
-      - name: Prepare gh-pages content
-        run: |
-          rm -rf ghpages_tmp || true
-          mkdir -p ghpages_tmp
-          cp -r repo/packages/* ghpages_tmp/ || true
-          touch ghpages_tmp/.nojekyll
-          ls -la ghpages_tmp
+          find bin/packages -type f -name "*.apk" -exec cp {} ../${{ env.REPO_PACKAGES_DIR }}/ \;
+          
+          # APK-Index erstellen (apk-tools sind im SDK bereits vorinstalliert)
+          cd ../${{ env.REPO_PACKAGES_DIR }}
+          apk index -o packages.adb *.apk
 
       - name: Deploy to gh-pages branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./ghpages_tmp
+          publish_dir: ../${{ env.REPO_PACKAGES_DIR }}
           publish_branch: ${{ env.GHPAGES_BRANCH }}
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
