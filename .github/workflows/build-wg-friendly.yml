@@ -1,4 +1,4 @@
-name: Build wg-friendly and publish to GitHub Pages
+name: Build wg-friendly on the fly and publish to GitHub Pages
 
 on:
   workflow_dispatch:
@@ -7,17 +7,20 @@ on:
       - main
       - 25.12
 
+env:
+  OPENWRT_REF: openwrt-25.12
+  FEED_PATH: feed-repo
+  REPO_PACKAGES_DIR: repo/packages
+  GHPAGES_BRANCH: gh-pages
+  # Setze hier einen Commit/Tag für das wg-friendly Repo für Reproduzierbarkeit
+  WG_FRIENDLY_COMMIT: main
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
-    env:
-      OPENWRT_REF: openwrt-25.12
-      FEED_PATH: feed-repo
-      REPO_PACKAGES_DIR: repo/packages
-      GHPAGES_BRANCH: gh-pages
 
     steps:
-      - name: Checkout feed repo
+      - name: Checkout feed repo (optional, used for repo metadata)
         uses: actions/checkout@v4
         with:
           path: ${{ env.FEED_PATH }}
@@ -32,22 +35,81 @@ jobs:
       - name: Install build dependencies (conditional)
         run: |
           sudo apt-get update
-          sudo apt-get install -y git build-essential libncurses5-dev gawk gettext unzip file python3 python3-pip
+          sudo apt-get install -y git build-essential libncurses5-dev gawk gettext unzip file python3 python3-pip curl
           if ! sudo apt-get install -y python3-distutils; then
             sudo apt-get install -y python3.11-distutils python3.12-distutils || true
           fi
 
-      - name: Add feed (local) and update
+      - name: Prepare package directory and fetch wg-friendly script (on the fly)
+        run: |
+          set -e
+          # Erstelle Paketverzeichnis direkt im OpenWrt-Tree
+          mkdir -p openwrt/package/local/wg-friendly/files
+          # Hole das Script raw von GitHub (pinne Commit/Tag über WG_FRIENDLY_COMMIT)
+          RAW_URL="https://raw.githubusercontent.com/g6094199/OpenWRT-Wireguard-friendly-cli-peernames/${WG_FRIENDLY_COMMIT}/wg-friendly"
+          echo "Fetching wg-friendly from: $RAW_URL"
+          curl -fsSL "$RAW_URL" -o openwrt/package/local/wg-friendly/files/wg-friendly
+          chmod 0755 openwrt/package/local/wg-friendly/files/wg-friendly
+          # Erzeuge ein einfaches Makefile für das Paket (GPL-3.0)
+          cat > openwrt/package/local/wg-friendly/Makefile <<'EOF'
+include $(TOPDIR)/rules.mk
+
+PKG_NAME:=wg-friendly
+PKG_VERSION:=0.1.0
+PKG_RELEASE:=1
+
+PKG_MAINTAINER:=g6094199
+PKG_LICENSE:=GPL-3.0
+PKG_LICENSE_FILES:=LICENSE
+
+include $(INCLUDE_DIR)/package.mk
+
+define Package/wg-friendly
+  SECTION:=net
+  CATEGORY:=Network
+  TITLE:=WireGuard friendly CLI peer names
+  DEPENDS:=+wireguard-tools
+endef
+
+define Package/wg-friendly/description
+  Small helper to show WireGuard peers with friendly names from UCI.
+endef
+
+define Build/Prepare
+    $(call Build/Prepare/Default)
+endef
+
+define Build/Compile
+    # no compile step; script is shell
+endef
+
+define Package/wg-friendly/install
+    $(INSTALL_DIR) $(1)/usr/bin
+    $(INSTALL_BIN) ./files/wg-friendly $(1)/usr/bin/wg-friendly
+endef
+
+$(eval $(call BuildPackage,wg-friendly))
+EOF
+          # Optional: lege eine kurze LICENSE-Datei ab (GPL-3.0 Hinweis)
+          cat > openwrt/package/local/wg-friendly/LICENSE <<'EOF'
+GPL-3.0-or-later
+EOF
+          ls -la openwrt/package/local/wg-friendly
+          echo "Package prepared."
+
+      - name: Update feeds (safe) and list packages
         run: |
           cd openwrt
-          echo "src-link myfeed ../${{ env.FEED_PATH }}" >> feeds.conf
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
+          # feeds.conf kann leer bleiben; wir haben das Paket direkt im package/local
+          ./scripts/feeds update -a || true
+          ./scripts/feeds install -a || true
+          # Debug: liste erkannte Pakete
+          find package -maxdepth 3 -type f -name "Makefile" -print | sed -n '1,200p'
+          grep -R "Package/wg-friendly" -n package || true
 
       - name: Create default .config (non-interactive)
         run: |
           cd openwrt
-          # Erzeuge eine Standard-Konfiguration, damit make nicht menuconfig aufruft
           make defconfig
 
       - name: Build package wg-friendly (non-interactive)
@@ -55,7 +117,6 @@ jobs:
           TERM: xterm
         run: |
           cd openwrt
-          # Setze TERM, damit ncurses-basierte Tools nicht mit "unknown terminal" fehlschlagen
           TERM=xterm make package/wg-friendly/compile V=s
 
       - name: Collect .apk artifacts
