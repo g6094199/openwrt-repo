@@ -1,3 +1,4 @@
+#
 # package/wg-friendly/Makefile
 include $(TOPDIR)/rules.mk
 
