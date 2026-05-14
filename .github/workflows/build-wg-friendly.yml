@@ -2,7 +2,7 @@ jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     container:
-      image: openwrt/sdk:x86-64 # Nutzt das offizielle, fertige SDK für 25.12
+      image: openwrt/sdk:x86-64-25.12 # Nutzt das offizielle, fertige SDK für 25.12
     env:
       REPO_PACKAGES_DIR: repo/packages
       GHPAGES_BRANCH: gh-pages
