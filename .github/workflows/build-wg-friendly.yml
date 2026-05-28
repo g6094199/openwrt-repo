@@ -18,10 +18,9 @@ jobs:
       - name: Checkout Feed-Repository
         uses: actions/checkout@v4
 
-      # DIESER SCHRITT ERMITTELT DEN AKTUELLEN MAIN-HASH UND PATCHT DAS MAKEFILE:
       - name: Fetch latest main commit hash and update Makefile
         run: |
-          # 1. Fragt die offizielle API nach dem aktuellsten Commit des echten Repositories ab
+          # HIER STEHT NUN DIE KORREKTE API-URL:
           LATEST_HASH=$(curl -s https://github.com | jq -r '.sha')
           echo "Aktuellster Commit-Hash auf main ist: $LATEST_HASH"
           
@@ -30,8 +29,7 @@ jobs:
             exit 1
           fi
           
-          # 2. Ersetzt den Platzhalter dynamisch im Makefile vor dem Build
-          sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$LATEST_HASH/" net/wg-friendly/Makefile
+          sed -i "s/PKG_SOURCE_VERSION:=PLACEHOLDER/PKG_SOURCE_VERSION:=$LATEST_HASH/" net/wg-friendly/Makefile
 
       - name: Build and Sign Packages via OpenWrt SDK
         uses: openwrt/gh-action-sdk@main
@@ -63,4 +61,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy
           publish_branch: gh-pages
-
