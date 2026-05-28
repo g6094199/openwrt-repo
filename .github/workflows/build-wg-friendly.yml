@@ -33,7 +33,13 @@ jobs:
         run: |
           # Definiere die wichtigsten Ziel-Architekturen von OpenWrt-Routern
           # x86_64 (PC/Server), aarch64_cortex-a53 (Moderne ARM64 Router), mipsel_24kc (Ältere MIPS-Router), arm_cortex-a7_neon (Viele ARMv7 Router)
-          ARCHS=("x86_64" "aarch64_cortex-a53" "mipsel_24kc" "arm_cortex-a7_neon")
+          ARCHS=("x86_64" "x86_generic" "x86_geode"
+            "aarch64_cortex-a53" "aarch64_cortex-a72" "aarch64_generic"
+            "arm_cortex-a7_neon" "arm_cortex-a9" "arm_cortex-a9_neon" "arm_cortex-a9_vfpv3" "arm_cortex-a15_neon"
+            "arm_arm1176jzf-s_vfp" "arm_arm926ej-s" "arm_fa526" "arm_mpcore" "arm_v7_vfp"
+            "mipsel_24kc" "mipsel_74kc" "mipsel_mips32" "mips_24kc" "mips_74kc" "mips_mips32"
+            "powerpc_464fp" "powerpc_85xx" "arc_arc700" "arc_archs" "riscv64_rv64imafdc_lp64d"
+          )
 
           # 1. Temporären Ordner für das saubere Paket erstellen
           mkdir -p tmp_feed
@@ -63,4 +69,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy
           publish_branch: gh-pages
-
+          force_orphan: true
