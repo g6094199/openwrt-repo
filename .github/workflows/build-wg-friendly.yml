@@ -57,8 +57,8 @@ jobs:
           # 3. SPIEGELN: Kopiere den Temp-Ordner in alle Architekturpfade
           for ARCH in "${ARCHS[@]}"; do
             echo "Erstelle konformen OpenWrt-Pfad für Architektur: $ARCH"
-            mkdir -p "deploy/packages/$ARCH/custom_feed"
-            cp -v tmp_feed/* "deploy/packages/$ARCH/custom_feed/"
+            mkdir -p "deploy/packages/$ARCH/packages"
+            cp -v tmp_feed/* "deploy/packages/$ARCH/packages"
           done
           
           rm -rf tmp_feed
