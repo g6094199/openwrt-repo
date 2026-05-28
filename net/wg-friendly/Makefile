@@ -5,11 +5,11 @@ PKG_NAME:=wg-friendly
 PKG_VERSION:=0.1.0
 PKG_RELEASE:=2
 
-# OpenWrt lädt den Quellcode automatisch via Git herunter und entpackt ihn nach $(PKG_BUILD_DIR)
+# Die vollständige Quell-URL zum Repository des Skripts
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com
-# Nutze den aktuellsten Commit-Hash oder ein Tag aus dem Upstream-Repo
-PKG_SOURCE_VERSION:=main
+# Wird von der GitHub Action dynamisch vor jedem Build überschrieben
+PKG_SOURCE_VERSION:=PLACEHOLDER
 PKG_MIRROR_HASH:=skip
 
 PKG_MAINTAINER:=g6094199
@@ -23,22 +23,21 @@ define Package/wg-friendly
   CATEGORY:=Network
   TITLE:=WireGuard friendly CLI peer names
   DEPENDS:=+wireguard-tools
+  PKGARCH:=all
 endef
 
 define Package/wg-friendly/description
   Small helper to show WireGuard peers with friendly names from UCI.
 endef
 
-# Standard-Verhalten reicht völlig aus, OpenWrt erledigt das Klonen im Hintergrund
 define Build/Prepare
 	$(call Build/Prepare/Default)
 endef
 
-# Da es ein reines Shell-Skript ist, wird die Kompilierung übersprungen
 define Build/Compile
+	# Reines Shell-Skript, keine Kompilierung nötig
 endef
 
-# Installation direkt aus dem automatisch geklonten Quellordner ($(PKG_BUILD_DIR))
 define Package/wg-friendly/install
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/wg-friendly $(1)/usr/bin/wg-friendly

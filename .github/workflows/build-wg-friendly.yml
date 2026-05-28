@@ -21,11 +21,16 @@ jobs:
       # DIESER SCHRITT ERMITTELT DEN AKTUELLEN MAIN-HASH UND PATCHT DAS MAKEFILE:
       - name: Fetch latest main commit hash and update Makefile
         run: |
-          # 1. Neuesten Commit-Hash von der GitHub-API für das Upstream-Repo abfragen
+          # 1. Fragt die offizielle API nach dem aktuellsten Commit des echten Repositories ab
           LATEST_HASH=$(curl -s https://github.com | jq -r '.sha')
           echo "Aktuellster Commit-Hash auf main ist: $LATEST_HASH"
           
-          # 2. Den Platzhalter im Makefile durch den echten Hash ersetzen
+          if [ "$LATEST_HASH" = "null" ] || [ -z "$LATEST_HASH" ]; then
+            echo "Fehler: Konnte Commit-Hash nicht von der GitHub API abrufen!"
+            exit 1
+          fi
+          
+          # 2. Ersetzt den Platzhalter dynamisch im Makefile vor dem Build
           sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$LATEST_HASH/" net/wg-friendly/Makefile
 
       - name: Build and Sign Packages via OpenWrt SDK
@@ -33,11 +38,9 @@ jobs:
         env:
           ARCH: x86_64-openwrt-25.12
           FEEDNAME: custom_feed
-          # Das konkrete Paket aus deinem Unterordner erzwingen. neue hinzufügen PACKAGES: wg-friendly mein-neues-tool
           PACKAGES: wg-friendly
           INDEX: 1
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
-          # DEINE IDEE: Mappt die Pfade im Docker-Container korrekt
           FEED_DIR: ${{ github.workspace }}
           ARTIFACTS_DIR: ${{ github.workspace }}
 
@@ -46,7 +49,6 @@ jobs:
           mkdir -p deploy/packages/noarch
           
           echo "Suche nach gebauten APK-Dateien im Workspace..."
-          # Da ARTIFACTS_DIR auf den Workspace zeigt, liegen die Dateien direkt in bin/
           find bin/packages/ -type f -name "*.apk" -exec cp -v {} deploy/packages/noarch/ \;
           find bin/packages/ -type f -name "APKINDEX.*" -exec cp -v {} deploy/packages/noarch/ \;
           
