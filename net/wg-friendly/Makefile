@@ -6,7 +6,7 @@ PKG_RELEASE:=4
 
 # Die exakte Quell-URL zu deinem ucode-Skript-Repository
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com
+PKG_SOURCE_URL:=https://github.com/g6094199/OpenWRT-Wireguard-friendly-cli-peernames
 PKG_SOURCE_VERSION:=PLACEHOLDER
 PKG_MIRROR_HASH:=skip
 
