@@ -9,7 +9,7 @@ PKG_RELEASE:=2
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com
 # Nutze den aktuellsten Commit-Hash oder ein Tag aus dem Upstream-Repo
-PKG_SOURCE_VERSION:=d6b2c2f64f9b8c0a37e127394c50616bb1c28c89
+PKG_SOURCE_VERSION:=main
 PKG_MIRROR_HASH:=skip
 
 PKG_MAINTAINER:=g6094199

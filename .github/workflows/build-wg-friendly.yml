@@ -23,7 +23,7 @@ jobs:
         env:
           ARCH: x86_64-openwrt-25.12
           FEEDNAME: custom_feed
-          # Das konkrete Paket aus deinem Unterordner erzwingen
+          # Das konkrete Paket aus deinem Unterordner erzwingen. neue hinzufügen PACKAGES: wg-friendly mein-neues-tool
           PACKAGES: wg-friendly
           INDEX: 1
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
