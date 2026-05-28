@@ -22,10 +22,10 @@ jobs:
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: x86_64-openwrt-25.12
-          # Auf deinen Wunsch-Namen geändert:
-          FEEDNAME: packages
+          # GEÄNDERT: Ein eindeutiger Name, um Duplikate im SDK zu verhindern
+          FEEDNAME: g6094199_feed
           # WICHTIG: Hier steht nun ebenfalls der neue Name davor!
-          PACKAGES: packages/wg-friendly
+          PACKAGES: g6094199_feed/wg-friendly
           INDEX: 0
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
           FEED_DIR: ${{ github.workspace }}
