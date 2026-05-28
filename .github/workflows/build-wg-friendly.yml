@@ -1,3 +1,7 @@
+cd ~/OpenWRT-feed-collection/.github/workflows
+rm -f build-wg-friendly.yml
+
+cat << 'EOF' > build-wg-friendly.yml
 name: Build and Sign OpenWrt 25.12 apk Feed
 
 on:
@@ -19,18 +23,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch latest main commit hash and update Makefile
-        env:
-          GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Die korrekte API-Adresse für dein OpenWRT-Wireguard-friendly-cli-peernames Repo
-          API_URL="https://github.com"
-          
-          if [ -n "$GITHUB_API_TOKEN" ]; then
-            LATEST_HASH=$(curl -s -H "Authorization: token $GITHUB_API_TOKEN" "$API_URL" | jq -r '.sha')
-          else
-            LATEST_HASH=$(curl -s "$API_URL" | jq -r '.sha')
-          fi
-          
+          # Feste URL direkt im curl-Befehl ohne Variablen-Zuweisung
+          LATEST_HASH=$(curl -s "https://github.com" | jq -r '.sha')
           echo "Aktuellster Commit-Hash auf main ist: $LATEST_HASH"
 
           if [ "$LATEST_HASH" = "null" ] || [ -z "$LATEST_HASH" ]; then
@@ -70,4 +65,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./deploy
           publish_branch: gh-pages
+EOF
 
