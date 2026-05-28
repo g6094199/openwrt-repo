@@ -12,31 +12,24 @@ OpenWrt 25.12 uses the **`apk`** package manager (Alpine Package Keeper) instead
 To allow your router to trust the signed packages, you must install the public key corresponding to the private key used in the GitHub Actions build pipeline.
 
 1. Connect to your OpenWrt router via **SSH**.
-2. Create and open a new key file:
-   ```bash
-   vi /etc/apk/keys/custom_feed.pub
-   ```
-3. Paste the contents of the public key into this file, then save and exit (`:wq`).
+2. Paste the contents of the public key into the file.
 
     ```
-    -----BEGIN PUBLIC KEY-----
+    echo '-----BEGIN PUBLIC KEY-----
     MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcUlsK/z3CLqfZ5pafb1s9FCGfn4c
     RGCRcbUcwDl6fJLgstWmDAhbRnah/HnlHC3cKE2HS5lAEW2oP+YRvGV9tA==
-    -----END PUBLIC KEY-----
+    -----END PUBLIC KEY-----' >> /etc/apk/keys/custom_feed.pub
     ```
 
 ### Step 2: Register the Feed Repository
 Add the URL of your hosted GitHub Pages repository to the list of active package sources.
 
-1. Open the repositories configuration file:
-   ```bash
-   vi /etc/apk/repositories
+
    ```
-2. Append the following line at the very end of the file:
-   ```text
-   https://g6094199.github.io/OpenWRT-feed-collection/packages
+    echo 'https://g6094199.github.io/OpenWRT-feed-collection/packages' >> /etc/apk/repositories
+
    ```
-3. Save and close the file.
+
 
 ---
 
