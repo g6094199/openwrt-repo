@@ -7,7 +7,7 @@ PKG_RELEASE:=2
 
 # Die vollständige Quell-URL zum Repository des Skripts
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com
+PKG_SOURCE_URL:=https://github.com/g6094199/wg-friendly.git
 # Wird von der GitHub Action dynamisch vor jedem Build überschrieben
 PKG_SOURCE_VERSION:=PLACEHOLDER
 PKG_MIRROR_HASH:=skip
