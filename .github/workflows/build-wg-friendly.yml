@@ -14,22 +14,6 @@ jobs:
     name: Build Feed
     runs-on: ubuntu-latest
 
-
-    steps:
-      - name: Checkout Feed-Repository
-        uses: actions/checkout@v4
-
-      # DIESER SCHRITT ERMITTELT DEN AKTUELLEN MAIN-HASH UND PATCHT DAS MAKEFILE:
-      - name: Fetch latest main commit hash and update Makefile
-        run: |
-          # 1. Neuesten Commit-Hash von der GitHub-API für das Upstream-Repo abfragen
-          LATEST_HASH=$(curl -s https://github.com | jq -r '.sha')
-          echo "Aktuellster Commit-Hash auf main ist: $LATEST_HASH"
-          
-          # 2. Den Platzhalter im Makefile durch den echten Hash ersetzen
-          sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=$LATEST_HASH/" net/wg-friendly/Makefile
-
-
     steps:
       - name: Checkout Feed-Repository
         uses: actions/checkout@v4
