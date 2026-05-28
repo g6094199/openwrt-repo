@@ -2,12 +2,12 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wg-friendly
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=4
+PKG_RELEASE:=12
 
-# Die exakte Quell-URL zu deinem ucode-Skript-Repository
+# Hier ist deine exakte externe URL hinterlegt:
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_URL:=https://github.com/g6094199/OpenWRT-Wireguard-friendly-cli-peernames
-PKG_SOURCE_VERSION:=PLACEHOLDER
+PKG_SOURCE_VERSION:=main
 PKG_MIRROR_HASH:=skip
 
 PKG_MAINTAINER:=g6094199
@@ -19,7 +19,6 @@ define Package/wg-friendly
   SECTION:=net
   CATEGORY:=Network
   TITLE:=WireGuard friendly CLI peer names
-  # ERWEITERT: ucode-mod-uci wird für den Import von 'uci' benötigt
   DEPENDS:=+wireguard-tools +ucode +ucode-mod-uci
   PKGARCH:=all
 endef
@@ -29,7 +28,7 @@ define Package/wg-friendly/description
 endef
 
 define Build/Compile
-	# Reines ucode-Skript, keine Kompilierung notwendig
+	# Reines ucode-Skript, keine Kompilierung nötig
 endef
 
 define Package/wg-friendly/install

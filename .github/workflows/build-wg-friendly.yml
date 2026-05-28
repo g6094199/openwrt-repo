@@ -18,19 +18,6 @@ jobs:
       - name: Checkout Feed-Repository
         uses: actions/checkout@v4
 
-      - name: Fetch latest main commit hash and update Makefile
-        run: |
-          # Feste URL direkt im curl-Befehl ohne Variablen-Zuweisung
-          LATEST_HASH=$(curl -s "https://github.com" | jq -r '.sha')
-          echo "Aktuellster Commit-Hash auf main ist: $LATEST_HASH"
-
-          if [ "$LATEST_HASH" = "null" ] || [ -z "$LATEST_HASH" ]; then
-            echo "Fehler: Konnte Commit-Hash nicht von der GitHub API abrufen!"
-            exit 1
-          fi
-
-          sed -i "s/PKG_SOURCE_VERSION:=PLACEHOLDER/PKG_SOURCE_VERSION:=$LATEST_HASH/" net/wg-friendly/Makefile
-
       - name: Build and Sign Packages via OpenWrt SDK
         uses: openwrt/gh-action-sdk@main
         env:
