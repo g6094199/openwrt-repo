@@ -22,7 +22,7 @@ jobs:
         # Wechsel auf die robustere SDK-Action, die Pfad-Fehler abfängt
         uses: sbwml/openwrt-gh-action-sdk@v1
         env:
-          ARCH: x86_64-25.12
+          ARCH: x86_64-openwrt-25.12
           FEEDNAME: custom_feed
           # Das SDK liest deinen lokalen Ordner (net/wg-friendly) automatisch ein
           PACKAGES: wg-friendly
