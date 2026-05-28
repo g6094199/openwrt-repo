@@ -28,6 +28,8 @@ jobs:
           PACKAGES: wg-friendly
           INDEX: 1
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
+          FEED_DIR: ${{ github.workspace }} 
+          ARTIFACTS_DIR: ${{ github.workspace }}
 
       - name: Prepare Feed for Deployment
         run: |
