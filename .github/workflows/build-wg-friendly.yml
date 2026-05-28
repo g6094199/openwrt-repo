@@ -19,31 +19,31 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build and Sign Packages via OpenWrt SDK
-        uses: openwrt/gh-action-sdk@v1
+        # Wechsel auf die robustere SDK-Action, die Pfad-Fehler abfängt
+        uses: sbwml/openwrt-gh-action-sdk@v1
         env:
           ARCH: x86_64-25.12.4
-          # WICHTIG: Definiert den Namen dieses Feeds im SDK
           FEEDNAME: custom_feed
-          # Sagt der Action, dass das ausgecheckte Repo selbst der Quell-Feed ist
+          # Das SDK liest deinen lokalen Ordner (net/wg-friendly) automatisch ein
           PACKAGES: wg-friendly
           INDEX: 1
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
 
       - name: Prepare Feed for Deployment
         run: |
-          mkdir -p deploy/packages
-          # Das offizielle SDK legt die gebauten Pakete in bin/packages/ abgelegte Strukturen ab
-          if [ -d "bin/packages/x86_64/custom_feed" ]; then
-            cp -r bin/packages/x86_64/custom_feed deploy/packages/noarch
-          elif [ -d "bin/packages/x86_64/base" ]; then
-            # Fallback falls das SDK es unter "base" oder direkt der Architektur ablegt
-            cp -r bin/packages/x86_64 deploy/packages/noarch
-          else
-            # Universeller Kopierbefehl für die generierten APKs
-            find bin/packages/ -name "*.apk" -exec cp {} deploy/packages/noarch/ \;
-            find bin/packages/ -name "APKINDEX.*" -exec cp {} deploy/packages/noarch/ \;
-          fi
+          mkdir -p deploy/packages/noarch
           
+          # Die Action legt die fertigen apk-Dateien standardmäßig in bin/packages/ ab
+          echo "Suche nach gebauten APK-Dateien..."
+          find bin/packages/ -type f -name "*.apk" -exec cp -v {} deploy/packages/noarch/ \;
+          find bin/packages/ -type f -name "APKINDEX.*" -exec cp -v {} deploy/packages/noarch/ \;
+          
+          # Sicherheitsprüfung, falls der Build fehlgeschlagen sein sollte
+          if [ -z "$(ls -A deploy/packages/noarch)" ]; then
+            echo "Fehler: Keine APK-Dateien oder Indizes gefunden!"
+            exit 1
+          fi
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
