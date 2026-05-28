@@ -1,7 +1,3 @@
-cd ~/OpenWRT-feed-collection/.github/workflows
-rm -f build-wg-friendly.yml
-
-cat << 'EOF' > build-wg-friendly.yml
 name: Build and Sign OpenWrt 25.12 apk Feed
 
 on:
