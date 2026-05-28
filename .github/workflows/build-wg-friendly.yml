@@ -25,7 +25,7 @@ jobs:
           # GEÄNDERT: Ein eindeutiger Name, um Duplikate im SDK zu verhindern
           FEEDNAME: g6094199_feed
           # WICHTIG: Hier steht nun ebenfalls der neue Name davor!
-          PACKAGES: g6094199_feed/wg-friendly
+          PACKAGES: wg-friendly
           INDEX: 0
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
           FEED_DIR: ${{ github.workspace }}
