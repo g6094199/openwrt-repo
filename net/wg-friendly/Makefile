@@ -2,10 +2,10 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wg-friendly
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=12
+PKG_RELEASE:=16
 
-# Hier ist deine exakte externe URL hinterlegt:
 PKG_SOURCE_PROTO:=git
+# Hier ist deine exakte Wunsch-URL ohne .git Endung hinterlegt:
 PKG_SOURCE_URL:=https://github.com/g6094199/OpenWRT-Wireguard-friendly-cli-peernames
 PKG_SOURCE_VERSION:=main
 PKG_MIRROR_HASH:=ca53419d0e19d1bb0b06dc60edd0d8e7aacf8b74a3f83d3534c7087d96197e2b
@@ -14,6 +14,8 @@ PKG_MAINTAINER:=g6094199
 PKG_LICENSE:=GPL-3.0
 
 include $(INCLUDE_DIR)/package.mk
+
+PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 
 define Package/wg-friendly
   SECTION:=net
@@ -28,7 +30,7 @@ define Package/wg-friendly/description
 endef
 
 define Build/Compile
-	# Reines ucode-Skript, keine Kompilierung nötig
+	# Reines ucode-Skript, keine Kompilierung notwendig
 endef
 
 define Package/wg-friendly/install

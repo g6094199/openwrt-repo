@@ -24,22 +24,21 @@ jobs:
           ARCH: x86_64-openwrt-25.12
           FEEDNAME: custom_feed
           PACKAGES: wg-friendly
-          # Auf 0 setzen, da die Action sonst versucht, alte opkg-Indizes zu erstellen:
           INDEX: 0
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
           FEED_DIR: ${{ github.workspace }}
           ARTIFACTS_DIR: ${{ github.workspace }}
+          # Aktiviert detailliertes Logging im Compiler bei Fehlern:
+          V: sc
 
       - name: Prepare Feed for Deployment
         run: |
           mkdir -p deploy/packages/noarch
 
-          echo "Suche nach gebauten APK-Dateien im gesamten Workspace..."
-          # Geändert: Wir durchsuchen den gesamten aktuellen Workspace, da ARTIFACTS_DIR aktiv ist!
+          echo "Suche nach gebauten Paket-Dateien im Workspace..."
           find . -type f -name "*.apk" -exec cp -v {} deploy/packages/noarch/ \;
           find . -type f -name "APKINDEX.*" -exec cp -v {} deploy/packages/noarch/ \;
 
-          # Sicherheitsprüfung
           if [ -z "$(ls -A deploy/packages/noarch)" ]; then
             echo "Fehler: Keine APK-Pakete im Workspace gefunden!"
             exit 1
