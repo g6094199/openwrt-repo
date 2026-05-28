@@ -19,16 +19,23 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Fetch latest main commit hash and update Makefile
+        env:
+          GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # HIER STEHT NUN DIE KORREKTE API-URL:
-          LATEST_HASH=$(curl -s https://github.com | jq -r '.sha')
+          REPO="${GITHUB_REPOSITORY}" # owner/repo
+          API_URL="https://api.github.com/repos/${REPO}/commits/main"
+          if [ -n "$GITHUB_API_TOKEN" ]; then
+            LATEST_HASH=$(curl -s -H "Authorization: token $GITHUB_API_TOKEN" "$API_URL" | jq -r '.sha')
+          else
+            LATEST_HASH=$(curl -s "$API_URL" | jq -r '.sha')
+          fi
           echo "Aktuellster Commit-Hash auf main ist: $LATEST_HASH"
-          
+
           if [ "$LATEST_HASH" = "null" ] || [ -z "$LATEST_HASH" ]; then
             echo "Fehler: Konnte Commit-Hash nicht von der GitHub API abrufen!"
             exit 1
           fi
-          
+
           sed -i "s/PKG_SOURCE_VERSION:=PLACEHOLDER/PKG_SOURCE_VERSION:=$LATEST_HASH/" net/wg-friendly/Makefile
 
       - name: Build and Sign Packages via OpenWrt SDK
@@ -45,13 +52,13 @@ jobs:
       - name: Prepare Feed for Deployment
         run: |
           mkdir -p deploy/packages/noarch
-          
-          echo "Suche nach gebauten APK-Dateien im Workspace..."
+
+          echo "Suche nach gebauten Paket-Dateien im Workspace..."
           find bin/packages/ -type f -name "*.apk" -exec cp -v {} deploy/packages/noarch/ \;
           find bin/packages/ -type f -name "APKINDEX.*" -exec cp -v {} deploy/packages/noarch/ \;
-          
+
           if [ -z "$(ls -A deploy/packages/noarch)" ]; then
-            echo "Fehler: Keine APK-Dateien generiert!"
+            echo "Fehler: Keine Paket-Dateien generiert!"
             exit 1
           fi
 
