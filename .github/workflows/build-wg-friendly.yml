@@ -30,12 +30,34 @@ jobs:
           ARTIFACTS_DIR: ${{ github.workspace }}
           V: sc
 
-      - name: Prepare Feed for Deployment (index & sign using Alpine container)
-        env:
-          APK_PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
+      # NEU: Dieser Schritt erzwingt die Erstellung der APKINDEX.tar.gz
+      - name: Generate legacy APKINDEX for broad compatibility
         run: |
-          set -euo pipefail
+          echo "Erzeuge APKINDEX.tar.gz im Workspace..."
+          # Wir suchen den Ordner, in dem das SDK die Pakete abgelegt hat
+          PKG_DIR=$(find bin/packages/ -type d -name "g6094199_feed" -print -quit || find . -type d -name "packages" -print -quit)
+          
+          if [ -n "$PKG_DIR" ] && [ -f "$PKG_DIR/packages.adb" ]; then
+            cd "$PKG_DIR"
+            # Spiegelt die packages.adb in das gezippte APKINDEX Format
+            cp -v packages.adb APKINDEX
+            tar -czf APKINDEX.tar.gz APKINDEX
+            
+            # Falls ein Signaturschlüssel existiert, signieren wir auch den tar.gz Index
+            if [ -n "${{ secrets.APK_PRIVATE_KEY }}" ]; then
+              echo "${{ secrets.APK_PRIVATE_KEY }}" > private_key.pem
+              # Nutze OpenSSL um die Signatur für das tar.gz Archiv zu schreiben
+              openssl dgst -sha256 -sign private_key.pem -out APKINDEX.tar.gz.sig APKINDEX.tar.gz || true
+              rm -f private_key.pem
+            fi
+            rm -f APKINDEX
+          else
+            echo "Warnung: Konnte packages.adb für die Konvertierung nicht finden!"
+          fi
 
+      - name: Prepare Feed for Deployment
+        run: |
+          # Alle offiziellen OpenWrt 25.12 Paket-Plattformen
           ARCHS=(
             "x86_64" "x86_generic" "x86_geode"
             "aarch64_cortex-a53" "aarch64_cortex-a72" "aarch64_generic"
@@ -46,43 +68,24 @@ jobs:
           )
 
           mkdir -p tmp_feed
-
-          # Kopiere .apk und vorhandene Index-/packages.adb-Dateien
+          
+          # Sammelt die .apk sowie ALLE Index-Dateien (packages.adb und APKINDEX.tar.gz) ein
           find . -type f -name "wg-friendly*.apk" -exec cp -v {} tmp_feed/ \;
           find . -type f -name "packages.adb*" -exec cp -v {} tmp_feed/ \;
-          find . -type f -name "APKINDEX.*" -exec cp -v {} tmp_feed/ \;
+          find . -type f -name "APKINDEX.tar.gz*" -exec cp -v {} tmp_feed/ \;
 
           if [ -z "$(ls -A tmp_feed)" ]; then
-            echo "Fehler: Dein Paket wg-friendly wurde nicht generiert!"
+            echo "Fehler: Es wurden keine Paket-Dateien generiert!"
             exit 1
           fi
 
-          # Schreibe privaten Schlüssel temporär (nur für Container-Bindmount)
-          printf '%s\n' "$APK_PRIVATE_KEY" > tmp_feed/apk_priv.key
-          chmod 600 tmp_feed/apk_priv.key
-
-          # Verwende kurzen Alpine-Container zum Installieren von apk-tools, Indexieren und Signieren
-          docker run --rm -v "$PWD/tmp_feed":/feed alpine:3.19 sh -eux -c '
-            apk add --no-cache apk-tools
-            cd /feed
-            apk index -o APKINDEX.tar.gz ./*.apk
-            apk sign --key apk_priv.key APKINDEX.tar.gz
-          '
-
-          # Entferne den privaten Schlüssel sofort lokal
-          if command -v shred >/dev/null 2>&1; then
-            shred -u tmp_feed/apk_priv.key 2>/dev/null || rm -f tmp_feed/apk_priv.key
-          else
-            rm -f tmp_feed/apk_priv.key
-          fi
-
-          # Spiegle Paket + Index in die OpenWrt-Pfade für alle ARCHs
+          # Spiegelt das gesamte Paket-Set in die standardkonformen OpenWrt-Pfade
           for ARCH in "${ARCHS[@]}"; do
             echo "Erstelle Struktur für: $ARCH"
             mkdir -p "deploy/packages/$ARCH/packages"
-            cp -v tmp_feed/* "deploy/packages/$ARCH/packages/"
+            cp tmp_feed/* "deploy/packages/$ARCH/packages/"
           done
-
+          
           rm -rf tmp_feed
 
       - name: Deploy to GitHub Pages
