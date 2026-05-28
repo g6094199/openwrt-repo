@@ -30,10 +30,11 @@ jobs:
           ARTIFACTS_DIR: ${{ github.workspace }}
           V: sc
 
-      - name: Prepare Feed for Deployment
+      - name: Prepare Feed for Deployment (index & sign using Alpine container)
+        env:
+          APK_PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y apk-tools
+          set -euo pipefail
 
           ARCHS=(
             "x86_64" "x86_generic" "x86_geode"
@@ -46,7 +47,7 @@ jobs:
 
           mkdir -p tmp_feed
 
-          # Kopiert dein Paket sowie Index-Dateien
+          # Kopiere .apk und vorhandene Index-/packages.adb-Dateien
           find . -type f -name "wg-friendly*.apk" -exec cp -v {} tmp_feed/ \;
           find . -type f -name "packages.adb*" -exec cp -v {} tmp_feed/ \;
           find . -type f -name "APKINDEX.*" -exec cp -v {} tmp_feed/ \;
@@ -56,28 +57,30 @@ jobs:
             exit 1
           fi
 
-          # Erzeuge APKINDEX.tar.gz aus allen .apk-Dateien
-          pushd tmp_feed
-          apk index -o APKINDEX.tar.gz ./*.apk
+          # Schreibe privaten Schlüssel temporär (nur für Container-Bindmount)
+          printf '%s\n' "$APK_PRIVATE_KEY" > tmp_feed/apk_priv.key
+          chmod 600 tmp_feed/apk_priv.key
 
-          # Schreibe privaten Schlüssel aus Secret in temporäre Datei, setze Rechte und signiere
-          echo "${{ secrets.APK_PRIVATE_KEY }}" > apk_priv.key
-          chmod 600 apk_priv.key
-          apk sign --key apk_priv.key APKINDEX.tar.gz
+          # Verwende kurzen Alpine-Container zum Installieren von apk-tools, Indexieren und Signieren
+          docker run --rm -v "$PWD/tmp_feed":/feed alpine:3.19 sh -eux -c '
+            apk add --no-cache apk-tools
+            cd /feed
+            apk index -o APKINDEX.tar.gz ./*.apk
+            apk sign --key apk_priv.key APKINDEX.tar.gz
+          '
 
-          # Sicher löschen der Schlüsseldatei (falls shred nicht verfügbar, fallback rm)
+          # Entferne den privaten Schlüssel sofort lokal
           if command -v shred >/dev/null 2>&1; then
-            shred -u apk_priv.key || rm -f apk_priv.key
+            shred -u tmp_feed/apk_priv.key 2>/dev/null || rm -f tmp_feed/apk_priv.key
           else
-            rm -f apk_priv.key
+            rm -f tmp_feed/apk_priv.key
           fi
-          popd
 
-          # Spiegelt das Paket + Index in die standardkonformen OpenWrt-Pfade
+          # Spiegle Paket + Index in die OpenWrt-Pfade für alle ARCHs
           for ARCH in "${ARCHS[@]}"; do
             echo "Erstelle Struktur für: $ARCH"
             mkdir -p "deploy/packages/$ARCH/packages"
-            cp tmp_feed/* "deploy/packages/$ARCH/packages/"
+            cp -v tmp_feed/* "deploy/packages/$ARCH/packages/"
           done
 
           rm -rf tmp_feed
