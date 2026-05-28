@@ -1,10 +1,10 @@
-name: Build OpenWrt 25.12 apk Feed
+name: Build and Sign OpenWrt 25.12 apk Feed
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Erlaubt manuelles Starten über die GitHub-Oberfläche
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,18 +18,18 @@ jobs:
       - name: Checkout Feed-Repository
         uses: actions/checkout@v4
 
-      - name: Build Packages via OpenWrt SDK
+      - name: Build and Sign Packages via OpenWrt SDK
         uses: openwrt/gh-action-sdk@v1
         env:
-          # Wir nutzen das SDK für x86_64, da wg-friendly plattformunabhängig (Shell-Script) ist
           ARCH: x86_64-25.12.4
           FEEDNAME: custom_feed
           INDEX: 1
+          # Das SDK signiert den apk-Feed automatisch mit diesem Schlüssel:
+          PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
 
       - name: Prepare Feed for Deployment
         run: |
           mkdir -p deploy/packages
-          # Kopiere die gebauten Pakete und die Index-Dateien (.apk und APKINDEX.tar.gz)
           cp -r bin/packages/x86_64/custom_feed deploy/packages/noarch
           
       - name: Deploy to GitHub Pages
