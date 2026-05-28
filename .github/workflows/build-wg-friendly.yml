@@ -22,15 +22,27 @@ jobs:
         uses: openwrt/gh-action-sdk@v1
         env:
           ARCH: x86_64-25.12.4
+          # WICHTIG: Definiert den Namen dieses Feeds im SDK
           FEEDNAME: custom_feed
+          # Sagt der Action, dass das ausgecheckte Repo selbst der Quell-Feed ist
+          PACKAGES: wg-friendly
           INDEX: 1
-          # Das SDK signiert den apk-Feed automatisch mit diesem Schlüssel:
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
 
       - name: Prepare Feed for Deployment
         run: |
           mkdir -p deploy/packages
-          cp -r bin/packages/x86_64/custom_feed deploy/packages/noarch
+          # Das offizielle SDK legt die gebauten Pakete in bin/packages/ abgelegte Strukturen ab
+          if [ -d "bin/packages/x86_64/custom_feed" ]; then
+            cp -r bin/packages/x86_64/custom_feed deploy/packages/noarch
+          elif [ -d "bin/packages/x86_64/base" ]; then
+            # Fallback falls das SDK es unter "base" oder direkt der Architektur ablegt
+            cp -r bin/packages/x86_64 deploy/packages/noarch
+          else
+            # Universeller Kopierbefehl für die generierten APKs
+            find bin/packages/ -name "*.apk" -exec cp {} deploy/packages/noarch/ \;
+            find bin/packages/ -name "APKINDEX.*" -exec cp {} deploy/packages/noarch/ \;
+          fi
           
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
