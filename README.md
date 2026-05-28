@@ -20,7 +20,8 @@ To allow your router to trust the signed packages, you must install the public k
 
     ```
     -----BEGIN PUBLIC KEY-----
-    MCowBQYDK2VwAyEAPwftG6AI2MuawR7Q7bFJU0CZ6R+2I9/E7oLdrv6jLi4=
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEcUlsK/z3CLqfZ5pafb1s9FCGfn4c
+    RGCRcbUcwDl6fJLgstWmDAhbRnah/HnlHC3cKE2HS5lAEW2oP+YRvGV9tA==
     -----END PUBLIC KEY-----
     ```
 
@@ -33,7 +34,7 @@ Add the URL of your hosted GitHub Pages repository to the list of active package
    ```
 2. Append the following line at the very end of the file:
    ```text
-   https://g6094199.github.io/OpenWRT-feed-collection/packages/noarch
+   https://g6094199.github.io/OpenWRT-feed-collection/packages
    ```
 3. Save and close the file.
 

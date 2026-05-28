@@ -28,21 +28,34 @@ jobs:
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
           FEED_DIR: ${{ github.workspace }}
           ARTIFACTS_DIR: ${{ github.workspace }}
-          # Aktiviert detailliertes Logging im Compiler bei Fehlern:
-          V: sc
 
       - name: Prepare Feed for Deployment
         run: |
-          mkdir -p deploy/packages/noarch
+          # Definiere die wichtigsten Ziel-Architekturen von OpenWrt-Routern
+          # x86_64 (PC/Server), aarch64_cortex-a53 (Moderne ARM64 Router), mipsel_24kc (Ältere MIPS-Router), arm_cortex-a7_neon (Viele ARMv7 Router)
+          ARCHS=("x86_64" "aarch64_cortex-a53" "mipsel_24kc" "arm_cortex-a7_neon")
 
-          echo "Suche nach gebauten Paket-Dateien im Workspace..."
-          find . -type f -name "*.apk" -exec cp -v {} deploy/packages/noarch/ \;
-          find . -type f -name "APKINDEX.*" -exec cp -v {} deploy/packages/noarch/ \;
+          # 1. Temporären Ordner für das saubere Paket erstellen
+          mkdir -p tmp_feed
+          
+          # 2. Kopiere die vom SDK gebauten Originaldateien in den Temp-Ordner
+          find . -type f -name "*.apk" -exec cp {} tmp_feed/ \;
+          find . -type f -name "APKINDEX.*" -exec cp {} tmp_feed/ \;
 
-          if [ -z "$(ls -A deploy/packages/noarch)" ]; then
-            echo "Fehler: Keine APK-Pakete im Workspace gefunden!"
+          # Sicherheitsprüfung
+          if [ -z "$(ls -A tmp_feed)" ]; then
+            echo "Fehler: Keine Pakete vom SDK generiert!"
             exit 1
           fi
+
+          # 3. SPIEGELN: Kopiere den Temp-Ordner in alle Architekturpfade
+          for ARCH in "${ARCHS[@]}"; do
+            echo "Erstelle konformen OpenWrt-Pfad für Architektur: $ARCH"
+            mkdir -p "deploy/packages/$ARCH/custom_feed"
+            cp -v tmp_feed/* "deploy/packages/$ARCH/custom_feed/"
+          done
+          
+          rm -rf tmp_feed
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
