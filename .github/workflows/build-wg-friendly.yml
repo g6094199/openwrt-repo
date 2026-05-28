@@ -22,13 +22,15 @@ jobs:
         env:
           GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Zielt nun auf das dedizierte Quellcode-Repository des Pakets ab
+          # Die korrekte API-Adresse für dein OpenWRT-Wireguard-friendly-cli-peernames Repo
           API_URL="https://github.com"
+          
           if [ -n "$GITHUB_API_TOKEN" ]; then
             LATEST_HASH=$(curl -s -H "Authorization: token $GITHUB_API_TOKEN" "$API_URL" | jq -r '.sha')
           else
             LATEST_HASH=$(curl -s "$API_URL" | jq -r '.sha')
           fi
+          
           echo "Aktuellster Commit-Hash auf main ist: $LATEST_HASH"
 
           if [ "$LATEST_HASH" = "null" ] || [ -z "$LATEST_HASH" ]; then

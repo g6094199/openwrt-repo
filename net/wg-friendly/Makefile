@@ -1,20 +1,17 @@
-# package/wg-friendly/Makefile
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wg-friendly
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=2
+PKG_RELEASE:=4
 
-# Die vollständige Quell-URL zum Repository des Skripts
+# Die exakte Quell-URL zu deinem ucode-Skript-Repository
 PKG_SOURCE_PROTO:=git
-PKG_SOURCE_URL:=https://github.com/g6094199/wg-friendly.git
-# Wird von der GitHub Action dynamisch vor jedem Build überschrieben
+PKG_SOURCE_URL:=https://github.com
 PKG_SOURCE_VERSION:=PLACEHOLDER
 PKG_MIRROR_HASH:=skip
 
 PKG_MAINTAINER:=g6094199
 PKG_LICENSE:=GPL-3.0
-PKG_LICENSE_FILES:=LICENSE
 
 include $(INCLUDE_DIR)/package.mk
 
@@ -22,20 +19,17 @@ define Package/wg-friendly
   SECTION:=net
   CATEGORY:=Network
   TITLE:=WireGuard friendly CLI peer names
-  DEPENDS:=+wireguard-tools
+  # ERWEITERT: ucode-mod-uci wird für den Import von 'uci' benötigt
+  DEPENDS:=+wireguard-tools +ucode +ucode-mod-uci
   PKGARCH:=all
 endef
 
 define Package/wg-friendly/description
-  Small helper to show WireGuard peers with friendly names from UCI.
-endef
-
-define Build/Prepare
-	$(call Build/Prepare/Default)
+  Small helper script written in ucode to show WireGuard peers with friendly names from UCI.
 endef
 
 define Build/Compile
-	# Reines Shell-Skript, keine Kompilierung nötig
+	# Reines ucode-Skript, keine Kompilierung notwendig
 endef
 
 define Package/wg-friendly/install
