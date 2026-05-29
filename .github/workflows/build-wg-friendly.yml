@@ -22,11 +22,8 @@ jobs:
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: x86_64-openwrt-25.12
-          # GEÄNDERT: Ein eindeutiger Name, um Duplikate im SDK zu verhindern
           FEEDNAME: g6094199_feed
-          # WICHTIG: Hier steht nun ebenfalls der neue Name davor!
           PACKAGES: wg-friendly
-          # GEÄNDERT: Auf 1 gesetzt, damit das SDK die neuen packages.adb-Dateien erzeugt und signiert
           INDEX: 1
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
           FEED_DIR: ${{ github.workspace }}
@@ -35,7 +32,7 @@ jobs:
 
       - name: Prepare Feed for Deployment
         run: |
-          # Alle offiziellen OpenWrt 25.12 Paket-Plattformen
+          # Alle offiziellen OpenWrt 25.12 Ziel-Architekturen
           ARCHS=(
             "x86_64" "x86_generic" "x86_geode"
             "aarch64_cortex-a53" "aarch64_cortex-a72" "aarch64_generic"
@@ -47,21 +44,23 @@ jobs:
 
           mkdir -p tmp_feed
           
-          # Filtert strikt: Kopiert dein Paket sowie alle alten und neuen Index-Formate (packages.adb)
-          find . -type f -name "wg-friendly*.apk" -exec cp -v {} tmp_feed/ \;
-          find . -type f -name "packages.adb*" -exec cp -v {} tmp_feed/ \;
-          find . -type f -name "APKINDEX.*" -exec cp -v {} tmp_feed/ \;
+          # Sucht die erzeugten .apk und Index-Dateien im SDK-Ausgabeordner
+          # Skriptpakete enden auf _all.apk, was hierdurch sauber abgefangen wird
+          find bin/ -type f -name "wg-friendly*.apk" -exec cp -v {} tmp_feed/ \;
+          find bin/ -type f -name "packages.adb*" -exec cp -v {} tmp_feed/ \;
+          find bin/ -type f -name "APKINDEX.*" -exec cp -v {} tmp_feed/ \;
 
           if [ -z "$(ls -A tmp_feed)" ]; then
-            echo "Fehler: Dein Paket wg-friendly wurde nicht generiert!"
+            echo "Fehler: Das Skriptpaket wg-friendly oder der Index wurde nicht im SDK-Pfad gefunden!"
             exit 1
           fi
 
-          # Spiegelt das Paket in die standardkonformen OpenWrt-Pfade
+          # Spiegelt die Architektur-unabhängigen Pakete in alle Zielarchitekturen
           for ARCH in "${ARCHS[@]}"; do
-            echo "Erstelle Struktur für: $ARCH"
-            mkdir -p "deploy/packages/$ARCH/packages"
-            cp tmp_feed/* "deploy/packages/$ARCH/packages/"
+            echo "Erstelle Feed-Struktur für: $ARCH"
+            # WICHTIG: Erstellt den exakten Unterordner 'packages' für den Feed-Namen
+            mkdir -p "deploy/packages/$ARCH/g6094199_feed"
+            cp tmp_feed/* "deploy/packages/$ARCH/g6094199_feed/"
           done
           
           rm -rf tmp_feed
