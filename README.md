@@ -1,10 +1,10 @@
 # OpenWRT-Repo
-OpenWRT collective feeds of built packages of this account.
+OpenWRT collective Repo of built packages of this account.
 
 # Installation
 
 
-## Adding the Custom Feed to an OpenWrt 25.12 Router
+## Adding the Custom Repo to an OpenWrt 25.12 Router
 
 OpenWrt 25.12 uses the **`apk`** package manager (Alpine Package Keeper) instead of the legacy `opkg`. By default, it strictly enforces signature verification for all active repositories. Follow these steps to import the trusted public key and add the feed to your router.
 
@@ -21,7 +21,7 @@ To allow your router to trust the signed packages, you must install the public k
     -----END PUBLIC KEY-----' >> /etc/apk/keys/custom_feed.pub
     ```
 
-### Step 2: Register the Feed Repository
+### Step 2: Register the Repository
 Add the URL of your hosted GitHub Pages repository to the list of active package sources.
 
 
