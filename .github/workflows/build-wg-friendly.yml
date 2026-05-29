@@ -22,7 +22,7 @@ jobs:
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: x86_64-openwrt-25.12
-          FEEDNAME: openwrt-repo
+          FEEDNAME: g6094199
           PACKAGES: wg-friendly
           INDEX: 1
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
@@ -58,8 +58,8 @@ jobs:
           for ARCH in "${ARCHS[@]}"; do
             echo "Erstelle Feed-Struktur für: $ARCH"
             # WICHTIG: Erstellt den exakten Unterordner 'packages' für den Feed-Namen
-            mkdir -p "deploy/packages/$ARCH/packages"
-            cp tmp_feed/* "deploy/packages/$ARCH/packages/"
+            mkdir -p "deploy/packages/$ARCH/g6094199"
+            cp tmp_feed/* "deploy/packages/$ARCH/g6094199/"
           done
           
           rm -rf tmp_feed
