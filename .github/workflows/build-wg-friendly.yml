@@ -48,7 +48,6 @@ jobs:
           # Skriptpakete enden auf _all.apk, was hierdurch sauber abgefangen wird
           find bin/ -type f -name "wg-friendly*.apk" -exec cp -v {} tmp_feed/ \;
           find bin/ -type f -name "packages.adb*" -exec cp -v {} tmp_feed/ \;
-          find bin/ -type f -name "APKINDEX.*" -exec cp -v {} tmp_feed/ \;
 
           if [ -z "$(ls -A tmp_feed)" ]; then
             echo "Fehler: Das Skriptpaket wg-friendly oder der Index wurde nicht im SDK-Pfad gefunden!"
@@ -59,8 +58,8 @@ jobs:
           for ARCH in "${ARCHS[@]}"; do
             echo "Erstelle Feed-Struktur für: $ARCH"
             # WICHTIG: Erstellt den exakten Unterordner 'packages' für den Feed-Namen
-            mkdir -p "deploy/packages/$ARCH/g6094199_feed"
-            cp tmp_feed/* "deploy/packages/$ARCH/g6094199_feed/"
+            mkdir -p "deploy/packages/$ARCH/packages"
+            cp tmp_feed/* "deploy/packages/$ARCH/packages/"
           done
           
           rm -rf tmp_feed
