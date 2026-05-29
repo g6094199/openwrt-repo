@@ -22,7 +22,7 @@ jobs:
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: x86_64-openwrt-25.12
-          FEEDNAME: packages
+          FEEDNAME: openwrt-repo
           PACKAGES: wg-friendly
           INDEX: 1
           PRIVATE_KEY: ${{ secrets.APK_PRIVATE_KEY }}
