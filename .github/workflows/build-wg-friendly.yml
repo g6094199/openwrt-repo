@@ -45,7 +45,6 @@ jobs:
           mkdir -p tmp_feed
           
           # Sucht die erzeugten .apk und Index-Dateien im SDK-Ausgabeordner
-          # Skriptpakete enden auf _all.apk, was hierdurch sauber abgefangen wird
           find bin/ -type f -name "wg-friendly*.apk" -exec cp -v {} tmp_feed/ \;
           find bin/ -type f -name "packages.adb*" -exec cp -v {} tmp_feed/ \;
 
@@ -57,10 +56,14 @@ jobs:
           # Spiegelt die Architektur-unabhängigen Pakete in alle Zielarchitekturen
           for ARCH in "${ARCHS[@]}"; do
             echo "Erstelle Feed-Struktur für: $ARCH"
-            # WICHTIG: Erstellt den exakten Unterordner 'packages' für den Feed-Namen
             mkdir -p "deploy/packages/$ARCH/g6094199"
             cp tmp_feed/* "deploy/packages/$ARCH/g6094199/"
           done
+
+          # EXTRA-SCHRITT: Generiert den passenden Public-Key direkt aus dem GitHub-Secret
+          echo "${{ secrets.APK_PRIVATE_KEY }}" > private_key.pem
+          openssl pkey -in private_key.pem -pubout -out "deploy/packages/g6094199.pem"
+          rm -f private_key.pem
           
           rm -rf tmp_feed
 
