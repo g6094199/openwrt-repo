@@ -8,7 +8,7 @@ PKG_SOURCE_PROTO:=git
 # Hier ist deine exakte Wunsch-URL ohne .git Endung hinterlegt:
 PKG_SOURCE_URL:=https://github.com/g6094199/OpenWRT-Wireguard-friendly-cli-peernames
 PKG_SOURCE_VERSION:=main
-#PKG_MIRROR_HASH:=ca53419d0e19d1bb0b06dc60edd0d8e7aacf8b74a3f83d3534c7087d96197e2b
+PKG_MIRROR_HASH:=ca53419d0e19d1bb0b06dc60edd0d8e7aacf8b74a3f83d3534c7087d96197e2b
 
 PKG_MAINTAINER:=g6094199
 PKG_LICENSE:=GPL-3.0
