@@ -26,7 +26,7 @@ Add the URL of your hosted GitHub Pages repository to the list of active package
 
 
    ```
-    echo 'https://g6094199.github.io/OpenWRT-feed-collection/packages' >> /etc/apk/repositories
+    echo 'https://g6094199.github.io/OpenWRT-feed-collection/packages/"YOUR ARCH'/packages/packages.adb >> /etc/apk/repositories.d/customfeeds.list
 
    ```
 
